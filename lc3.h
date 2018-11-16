@@ -57,6 +57,9 @@ typedef struct cpu_s {
   Register mar;
   Register mdr;
   Register pc;
+  unsigned char n;
+  unsigned char z;
+  unsigned char p;
 } CPU_s;
 
 Register sext9(Register reg);

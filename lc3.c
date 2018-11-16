@@ -13,6 +13,7 @@ int main(int argc, char *argv[]) {
   int i;
   int line = 0;
   CPU_s *cpu = (CPU_s *) malloc(sizeof(CPU_s));
+  ALU_s *alu = (ALU_s *) malloc(sizeof(ALU_s));
   FILE *in = fopen(argv[1], "r");
 
   cpu->pc = 0;
@@ -25,18 +26,17 @@ int main(int argc, char *argv[]) {
   }
   // Read in memory
   while (line < SIZE_OF_MEM && fscanf(in, "0x%hX\n", &mem[line++]) != EOF);
-  displayDebug(cpu, 0, mem);
+  displayDebug(cpu, alu, 0, mem);
   getch();
   endUI();
-//  controller(cpu);
+//  controller(cpu, alu);
 
   return 0;
 }
 
-int controller(CPU_s *cpu) {
+int controller(CPU_s *cpu, ALU_s *alu) {
   unsigned short opcode, dr, sr1, sr2;
   int state = FETCH;
-  ALU_s *alu = (ALU_s *) malloc(sizeof(ALU_s));
   for (;;) {
     switch (state) {
       case FETCH:

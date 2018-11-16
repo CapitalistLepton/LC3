@@ -34,33 +34,33 @@ void debugWin(int leftX) {
   wprintw(debug, label);
 }
 
-void displayDebug(CPU_s *cpu, ALU_s *alu, int memStart, unsigned short mem[]) { 
+void displayDebug(CPU_s *cpu, ALU_s *alu, int memStart, unsigned short mem[]) {
   int i;
 
   for (i = 0; i < 8; i++) {
-    mvwprintw(debug, 1 + i, 0, "R%d:x%04X\t\tx%04X:x%04X", i, cpu->regFile[i], 
+    mvwprintw(debug, 1 + i, 0, "R%d:x%04X\t\tx%04X:x%04X", i, cpu->regFile[i],
       memStart + i, mem[memStart + i]);
   }
   for (; i < 11; i++) {
-    mvwprintw(debug, 1 + i, 0, "\t\t\tx%04X:x%04X", i, memStart + i, 
+    mvwprintw(debug, 1 + i, 0, "\t\t\tx%04X:x%04X", i, memStart + i,
       mem[memStart + i]);
   }
   i++;
-  mvwprintw(debug, i, 0, "PC:x%04X\tIR:x%04X\tx%04X:x%04X", cpu->pc, cpu->ir, 
+  mvwprintw(debug, i, 0, "PC:x%04X  IR:x%04X\tx%04X:x%04X", cpu->pc, cpu->ir,
     memStart + i, mem[memStart + i]);
   i++;
-  mvwprintw(debug, i, 0, "A: x%04X\tB: x%04X\tx%04X:x%04X", cpu->pc, cpu->ir, 
+  mvwprintw(debug, i, 0, "A: x%04X  B: x%04X\tx%04X:x%04X", alu->a, alu->b,
     memStart + i, mem[memStart + i]);
   wrefresh(debug);
 }
 
-void puts(char *) {
+void putString(char *str) {
 }
 
-void out(char) {
+void outChar(char ch) {
 }
 
-char getc() {
+char getChar() {
 }
 
 void endUI() {

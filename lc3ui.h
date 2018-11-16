@@ -13,9 +13,9 @@ void startUI();
 void greetingWin(char *msg);
 void debugWin(int leftX);
 void displayDebug(CPU_s *cpu, ALU_s *alu, int memStart, unsigned short mem[]);
-void puts(char *);
-void out(char);
-char getc();
+void putString(char *str);
+void outChar(char ch);
+char getChar();
 void endUI();
 
 #endif

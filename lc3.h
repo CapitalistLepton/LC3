@@ -62,7 +62,7 @@ typedef struct cpu_s {
 Register sext9(Register reg);
 Register sext6(Register reg);
 Register sext5(Register reg);
-int controller(CPU_s *cpu);
+int controller(CPU_s *cpu, ALU_s *alu);
 void printStatus(CPU_s *cpu, ALU_s *alu);
 
 #endif

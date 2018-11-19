@@ -4,7 +4,7 @@ WINDOW *greeting;
 WINDOW *debug;
 WINDOW *selection;
 WINDOW *input;
-WINDOW *ouput;
+WINDOW *output;
 
 void startUI() {
   char *msg = "Welcome to the LC-3 Simulator";
@@ -18,11 +18,15 @@ void startUI() {
   greetingWin(msg);
   debugWin(leftX);
   selectWin(leftX);
+  inputWin(leftX);
+  outputWin(leftX);
 
   wrefresh(stdscr);
   wrefresh(greeting);
   wrefresh(debug);
   wrefresh(selection);
+  wrefresh(input);
+  wrefresh(output);
 }
 
 void greetingWin(char *msg) {
@@ -40,6 +44,16 @@ void selectWin(int leftX) {
   selection = newwin(SELECT_LEN, COLS, DEBUG_LEN, leftX + SELECT_SHIFT);
   wprintw(selection, "Select: 1) Load, 3) Step, 5) Display Mem, 9) Exit\n");
   wprintw(selection, "> ");
+}
+
+void inputWin(int leftX) {
+  input = newwin(IN_LEN, COLS, DEBUG_LEN + SELECT_LEN, leftX);
+  wprintw(input, "Input: ");
+}
+
+void outputWin(int leftX) {
+  output = newwin(OUT_LEN, COLS, DEBUG_LEN + SELECT_LEN + IN_LEN, leftX);
+  wprintw(output, "Output: ");
 }
 
 void displayDebug(CPU_s *cpu, ALU_s *alu, int memStart, unsigned short mem[]) {
@@ -77,12 +91,16 @@ char getSelection() {
 }
 
 void putString(char *str) {
+  wprintw(output, "Output: %s", str);
 }
 
 void outChar(char ch) {
+  wprintw(output, "Output: %c", ch);
 }
 
 char getChar() {
+  wmove(input, IN_CUR_Y, IN_CUR_X);
+  char ch = wgetch(input);
   return 0;
 }
 

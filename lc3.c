@@ -121,12 +121,11 @@ int controller(CPU_s *cpu, ALU_s *alu) {
 
               nzp = cpu->ir >> DR_SHIFT & LAST3;
               cpu->sext = sext9(cpu->ir & LAST9);
-                cpu->n = (nzp & 4) ?  1 : 0;
-                cpu->z = (nzp & 2) ?  1 : 0;
-                cpu->p = (nzp & 1) ?  1 : 0;
+                n = (nzp & 4) ?  1 : 0;
+                z = (nzp & 2) ?  1 : 0;
+                p = (nzp & 1) ?  1 : 0;
 
             case TRAP:
-              /// pg 541
               cpu->pc = cpu->ir & TRAPVECT8;
 
 
@@ -169,7 +168,9 @@ int controller(CPU_s *cpu, ALU_s *alu) {
             cpu->pc = cpu->regFile[sr1];
             break;
             case BR:
-              cpu->pc = cpu->sext + cpu->pc;
+              if( (n & cpu->n) || (z & cpu->z) || (p & cpu->p) ) {
+                cpu->pc = cpu->sext + cpu->pc;
+              }
               break;
             case TRAP:
               if (cpu->pc == TRAPVECT8) {

@@ -6,13 +6,22 @@
 #include <ncurses.h>
 #include "lc3.h"
 
+#define GREET_LEN 1
+#define DEBUG_LEN 18
+#define SELECT_LEN 2
+#define SELECT_SHIFT -7
+#define SELECT_CUR_X 2
+#define SELECT_CUR_Y 1
+
 typedef struct cpu_s CPU_s;
 typedef struct alu_s ALU_s;
 
 void startUI();
 void greetingWin(char *msg);
 void debugWin(int leftX);
+void selectWin(int leftX);
 void displayDebug(CPU_s *cpu, ALU_s *alu, int memStart, unsigned short mem[]);
+char getSelection();
 void putString(char *str);
 void outChar(char ch);
 char getChar();

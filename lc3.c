@@ -1,4 +1,5 @@
 #include "lc3.h"
+#include "lc3ui.h"
 
 /*
  * Zane Littrell, Luke Gillmore, Trenton Greevebiester, Veronica Gross
@@ -13,6 +14,7 @@ int main(int argc, char *argv[]) {
   int i;
   int line = 0;
   CPU_s *cpu = (CPU_s *) malloc(sizeof(CPU_s));
+  ALU_s *alu = (ALU_s *) malloc(sizeof(ALU_s));
   FILE *in = fopen(argv[1], "r");
 
   cpu->pc = 0;
@@ -25,18 +27,19 @@ int main(int argc, char *argv[]) {
   }
   // Read in memory
   while (line < SIZE_OF_MEM && fscanf(in, "0x%hX\n", &mem[line++]) != EOF);
-  displayDebug(cpu, 0, mem);
+  displayDebug(cpu, alu,  0, mem);
   getch();
   endUI();
-//  controller(cpu);
+  controller(cpu, alu);
 
   return 0;
 }
 
-int controller(CPU_s *cpu) {
-  unsigned short opcode, dr, sr1, sr2;
+int controller(CPU_s *cpu, ALU_s *alu) {
+  unsigned short opcode, dr, sr1, sr2, nzp;
+  unsigned char n, z, p; n = z = p = 0;
   int state = FETCH;
-  ALU_s *alu = (ALU_s *) malloc(sizeof(ALU_s));
+
   for (;;) {
     switch (state) {
       case FETCH:
@@ -114,6 +117,24 @@ int controller(CPU_s *cpu) {
             alu->b = sr1;
             alu->r = alu->a + alu->b;
             break;
+            case BR:
+              /// didn't do anything with nzp
+              nzp = cpu->ir >> DR_SHIFT & LAST3;
+              cpu->sext = sext9(cpu->ir & LAST9);
+              printf("%d\n<-----------", nzp);
+                cpu->n = (nzp & 8) ?  1 : 0;
+                cpu->z = (nzp & 4) ?  1 : 0;
+                cpu->p = (nzp & 2) ?  1 : 0;
+
+                printf("\t\t\t-------> n = %d z = %d z = %d \n", cpu->n, cpu->z, cpu->p);
+
+
+            case TRAP:
+              /// pg 541
+              cpu->pc = cpu->ir & TRAPVECT8;
+
+
+              break;
         }
         state = FETCH_OP;
         break;
@@ -139,7 +160,7 @@ int controller(CPU_s *cpu) {
             break;
           case AND:
             alu->a = cpu->regFile[sr1];
-            if(cpu->ir & ADD_IMMED){
+            if(cpu->ir & ADD_IMMED) {
                 alu->b = sr2;
             } else {
                 alu->b = cpu->regFile[sr2];
@@ -151,6 +172,15 @@ int controller(CPU_s *cpu) {
           case JMP:
             cpu->pc = cpu->regFile[sr1];
             break;
+            case BR:
+              /// PAGE 132.
+              cpu->pc = cpu->sext + cpu->pc;
+              break;
+            case TRAP:
+              if (cpu->pc == TRAPVECT8) {
+                printf("%s\n","HALTING PROGRAM");
+                exit(0);
+              }
         }
         state = EXECUTE;
         break;

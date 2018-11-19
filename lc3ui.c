@@ -54,14 +54,14 @@ void displayDebug(CPU_s *cpu, ALU_s *alu, int memStart, unsigned short mem[]) {
   wrefresh(debug);
 }
 
-void puts(char *) {
-}
-
-void out(char) {
-}
-
-char getc() {
-}
+//void puts(char *) {
+//}
+//
+//void out(char) {
+//}
+//
+//char getc() {
+//}
 
 void endUI() {
   delwin(greeting);

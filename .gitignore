@@ -1,2 +1,7 @@
 *.o
 lc3
+.DS_Store
+.idea/*
+CMakeLists.txt
+cmake-build-debug/
+run.sh

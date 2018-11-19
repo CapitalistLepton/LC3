@@ -118,16 +118,12 @@ int controller(CPU_s *cpu, ALU_s *alu) {
             alu->r = alu->a + alu->b;
             break;
             case BR:
-              /// didn't do anything with nzp
+
               nzp = cpu->ir >> DR_SHIFT & LAST3;
               cpu->sext = sext9(cpu->ir & LAST9);
-              printf("%d\n<-----------", nzp);
-                cpu->n = (nzp & 8) ?  1 : 0;
-                cpu->z = (nzp & 4) ?  1 : 0;
-                cpu->p = (nzp & 2) ?  1 : 0;
-
-                printf("\t\t\t-------> n = %d z = %d z = %d \n", cpu->n, cpu->z, cpu->p);
-
+                cpu->n = (nzp & 4) ?  1 : 0;
+                cpu->z = (nzp & 2) ?  1 : 0;
+                cpu->p = (nzp & 1) ?  1 : 0;
 
             case TRAP:
               /// pg 541
@@ -173,7 +169,6 @@ int controller(CPU_s *cpu, ALU_s *alu) {
             cpu->pc = cpu->regFile[sr1];
             break;
             case BR:
-              /// PAGE 132.
               cpu->pc = cpu->sext + cpu->pc;
               break;
             case TRAP:

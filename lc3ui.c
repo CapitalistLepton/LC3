@@ -42,7 +42,7 @@ void debugWin(int leftX) {
 
 void selectWin(int leftX) {
   selection = newwin(SELECT_LEN, COLS, DEBUG_LEN, leftX + SELECT_SHIFT);
-  wprintw(selection, "Select: 1) Load, 3) Step, 5) Display Mem, 9) Exit\n");
+  wprintw(selection, "Select: 1) Load, 2) Run, 3) Step, 5) Display Mem, 9) Exit\n");
   wprintw(selection, "> ");
 }
 

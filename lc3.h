@@ -67,6 +67,7 @@ typedef struct cpu_s {
   unsigned char p;
 } CPU_s;
 
+Register sext(Register reg, Register signBit, Register signExtend);
 Register sext9(Register reg);
 Register sext6(Register reg);
 Register sext5(Register reg);

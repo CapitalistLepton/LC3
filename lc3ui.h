@@ -6,6 +6,8 @@
 #include <ncurses.h>
 #include "lc3.h"
 
+#define NUM_REG 8
+#define MEM_LINES 11
 #define GREET_LEN 1
 #define DEBUG_LEN 18
 #define SELECT_LEN 2

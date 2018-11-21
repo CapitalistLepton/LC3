@@ -48,7 +48,7 @@ void selectWin(int leftX) {
 
 void inputWin(int leftX) {
   input = newwin(IN_LEN, COLS, DEBUG_LEN + SELECT_LEN, leftX);
-  wprintw(input, "Input: ");
+  wprintw(input, "Input: \n");
 }
 
 void outputWin(int leftX) {
@@ -59,11 +59,11 @@ void outputWin(int leftX) {
 void displayDebug(CPU_s *cpu, ALU_s *alu, int memStart, unsigned short mem[]) {
   int i;
 
-  for (i = 0; i < 8; i++) {
+  for (i = 0; i < NUM_REG; i++) {
     mvwprintw(debug, GREET_LEN + i, 0, "R%d:x%04X\t\tx%04X:x%04X", i, 
       cpu->regFile[i], memStart + i, mem[memStart + i]);
   }
-  for (; i < 11; i++) {
+  for (; i < MEM_LINES; i++) {
     mvwprintw(debug, GREET_LEN + i, 0, "\t\t\tx%04X:x%04X", i, memStart + i,
       mem[memStart + i]);
   }
@@ -91,11 +91,13 @@ char getSelection() {
 }
 
 void putString(char *str) {
-  wprintw(output, "Output: %s", str);
+  mvwprintw(output, 0, 0, "Output: %s", str);
+  wrefresh(output);
 }
 
 void outChar(char ch) {
-  wprintw(output, "Output: %c", ch);
+  mvwprintw(output, 0, 0, "Output: %c", ch);
+  wrefresh(output);
 }
 
 char getChar() {

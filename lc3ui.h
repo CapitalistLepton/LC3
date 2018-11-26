@@ -20,6 +20,7 @@
 #define IN_CUR_Y 0
 
 typedef struct cpu_s CPU_s;
+typedef struct alu_s ALU_s;
 
 void startUI();
 void endUI();

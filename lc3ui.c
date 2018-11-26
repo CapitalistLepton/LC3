@@ -11,7 +11,8 @@ void startUI() {
   keypad(stdscr, TRUE); // Use keyboard mapping
   cbreak(); // Read in all characters without waiting for an ENTER
   
-  leftX = (COLS - strlen(msg)) / 2;
+  char *msg = "Welcome to the LC-3 Simulator";
+  int leftX = (COLS - strlen(msg)) / 2;
   greetingWin(msg);
   debugWin(leftX);
   selectWin(leftX);
@@ -31,7 +32,7 @@ void greetingWin(char *msg) {
   wprintw(greeting, msg);
 }
 
-void debugWin() {
+void debugWin(int leftX) {
   char *label = "Registers\t\tMemory";
   debug = newwin(DEBUG_LEN, COLS, GREET_LEN, leftX);
   wprintw(debug, label);

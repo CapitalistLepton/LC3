@@ -1,7 +1,7 @@
 #include "lc3.h"
 
 /*
- * Zane Littrell, Luke Gillmore, Trenton Greevebiester, Veronica Gross
+ * Zane Littrell, Luke Gillmore, Trenton Greevebiester
  * Final Project
  */
 
@@ -72,6 +72,7 @@ int controller(CPU_s *cpu) {
             alu->a = cpu->pc;
             alu->b = sr1;
             alu->r = alu->a + alu->b;
+			nzpCheck(cpu, r);
             break;
           case ST:
             sr1 = cpu->ir >> DR_SHIFT & LAST3;
@@ -98,6 +99,7 @@ int controller(CPU_s *cpu) {
             alu->a = cpu->regFile[sr1];
             alu->b = sr2;
             alu->r = alu->a + alu->b;
+			nzpCheck(cpu, r);
             break;
           case NOT:
             dr = cpu->ir >> DR_SHIFT & LAST3;
@@ -113,6 +115,14 @@ int controller(CPU_s *cpu) {
             alu->a = cpu->pc;
             alu->b = sr1;
             alu->r = alu->a + alu->b;
+			nzpCheck(cpu, r);
+            break;
+		  case JSR:
+			if (cpu->ir & JSR_IMMED) { 
+              cpu->sext = sext11(cpu->ir & LAST11);
+            } else {
+			  sr1 = cpu->ir >> SR1_SHIFT & LAST3;
+            }
             break;
         }
         state = FETCH_OP;
@@ -151,6 +161,14 @@ int controller(CPU_s *cpu) {
           case JMP:
             cpu->pc = cpu->regFile[sr1];
             break;
+		  case JSR:
+			if (cpu->ir & JSR_IMMED) { 
+              alu->a = cpu->pc;
+			  alu->b = cpu->sext;
+            } else {
+              alu->a = ZERO;
+			  alu->b = cpu->regFile[sr1];
+            }
         }
         state = EXECUTE;
         break;
@@ -159,12 +177,20 @@ int controller(CPU_s *cpu) {
         switch (opcode) {
           case ADD:
             alu->r = alu->a + alu->b;
+			nzpCheck(cpu, r);
             break;
           case AND:
             alu->r = alu->a & alu->b;
+			nzpCheck(cpu, r);
             break;
           case NOT:
             alu->r = ~alu->a;
+			nzpCheck(cpu, r);
+            break;
+		  case JSR:
+			cpu->regFile[R7] = cpu->pc;
+            alu->r = alu->a + alu->b;
+			cpu->pc = alu->r;
             break;
         }
         state = STORE;
@@ -218,6 +244,23 @@ void printStatus(CPU_s *cpu, ALU_s *alu) {
   }
 }
 
+void nzpCheck(CPU_s *cpu, Register reg) {
+	if (reg < 0) 
+		cpu->n = 1;
+	else
+		cpu->n = 0;
+	
+	if (reg > 0) 
+		cpu->p = 1;
+	else
+		cpu->p = 0;
+	
+	if (reg == 0) 
+		cpu->z = 1;
+	else
+		cpu->z = 0;
+}
+
 Register sext5(Register reg) {
   Register out = reg;
   if (reg & SIGN_BIT_5) {
@@ -238,6 +281,14 @@ Register sext9(Register reg) {
   Register out = reg;
   if (reg & SIGN_BIT_9) {
     out |= SIGN_EXTEND_9;
+  }
+  return out;
+}
+
+Register sext11(Register reg) {
+  Register out = reg;
+  if (reg & SIGN_BIT_11) {
+    out |= SIGN_EXTEND_11;
   }
   return out;
 }

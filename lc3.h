@@ -28,13 +28,8 @@
 #define R7 7
 #define ZERO 0
 
-
-
 #define ADD_IMMED 0x20
 #define JSR_IMMED 0x800
-
-#define TRAPVECT8 0x0019
-
 
 #define OPCODE_SHIFT 12
 #define DR_SHIFT 9 
@@ -55,8 +50,6 @@
 #define GETC 32
 #define OUT 33
 #define PUTS 34
-#define IN 35
-#define PUSTP 36
 #define HALT 37
 
 #define FETCH 0

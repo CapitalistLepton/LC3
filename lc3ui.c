@@ -110,7 +110,7 @@ char getChar() {
   wrefresh(input);
   wmove(input, IN_CUR_Y, IN_CUR_X);
   char ch = wgetch(input);
-  return 0;
+  return ch;
 }
 
 void getString(char *str, int length) {

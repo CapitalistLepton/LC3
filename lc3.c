@@ -94,7 +94,7 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             alu->a = cpu->pc;
             alu->b = sr1;
             alu->r = alu->a + alu->b;
-			nzpCheck(cpu, alu->r);
+            nzpCheck(cpu, alu->r);
             break;
           case ST:
             sr1 = cpu->ir >> DR_SHIFT & LAST3;
@@ -161,9 +161,8 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
                 p = (nzp & 1) ?  1 : 0;
 
             case TRAP:
-              cpu->pc = cpu->ir & TRAPVECT8;
-
-
+              cpu->regFile[7] = cpu->pc;
+              cpu->pc = cpu->ir & LAST8;
               break;
         }
         state = FETCH_OP;
@@ -207,11 +206,6 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             }
             cpu->n = cpu->z = cpu->p = n = z = p = 0;
             break;
-          case TRAP:
-            if (cpu->pc == TRAPVECT8) {
-              printf("%s\n","HALTING PROGRAM");
-              exit(0);
-            }
           case JSR:
             if (cpu->ir & JSR_IMMED) { 
               alu->a = cpu->pc;
@@ -243,14 +237,21 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
 			cpu->pc = alu->r;
             break;
           case TRAP:
-            switch(cpu->ir & LAST8) {
+            switch(cpu->pc) {
               case GETC:
                 sr1 = getChar();
                 cpu->regFile[0] = sr1;
+                cpu->pc = cpu->regFile[7];
                 break;
               case OUT:
                 outChar(cpu->regFile[0]);
+                cpu->pc = cpu->regFile[7];
+                break;
+              case PUTS:
+                // TODO all of it
+                break; 
               case HALT:
+                putString("-----HALTING PROGRAM-----");
                 return HALT;
             }
             break;
@@ -284,7 +285,7 @@ void load(char *filename) {
   FILE *in = fopen(filename, "r");
   char str[10];
   int line = 0;
-  while(line < SIZE_OF_MEM && fscanf(in, "0x%hX\n", &mem[line++]) != EOF);
+  while(line < SIZE_OF_MEM && fscanf(in, "%hX\n", &mem[line++]) != EOF);
 
   fclose(in);
 }

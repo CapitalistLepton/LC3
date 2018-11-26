@@ -42,7 +42,7 @@ void debugWin(int leftX) {
 
 void selectWin(int leftX) {
   selection = newwin(SELECT_LEN, COLS, DEBUG_LEN, leftX + SELECT_SHIFT);
-  wprintw(selection, "Select: 1) Load, 3) Step, 5) Display Mem, 9) Exit\n");
+  wprintw(selection, "Select: 1) Load, 2) Run, 3) Step, 5) Display Mem, 9) Exit\n");
   wprintw(selection, "> ");
 }
 
@@ -64,7 +64,7 @@ void displayDebug(CPU_s *cpu, ALU_s *alu, int memStart, unsigned short mem[]) {
       cpu->regFile[i], memStart + i, mem[memStart + i]);
   }
   for (; i < 11; i++) {
-    mvwprintw(debug, GREET_LEN + i, 0, "\t\t\tx%04X:x%04X", i, memStart + i,
+    mvwprintw(debug, GREET_LEN + i, 0, "\t\t\tx%04X:x%04X", memStart + i,
       mem[memStart + i]);
   }
   mvwprintw(debug, GREET_LEN + i, 0, "PC:x%04X  IR:x%04X\tx%04X:x%04X", cpu->pc,
@@ -79,7 +79,7 @@ void displayDebug(CPU_s *cpu, ALU_s *alu, int memStart, unsigned short mem[]) {
   mvwprintw(debug, GREET_LEN + i, 0, "CC: N:%X Z:%X P:%X\t\tx%04X:x%04X", 
     cpu->n, cpu->z, cpu->p, memStart + i, mem[memStart + i]);
   i++;
-  mvwprintw(debug, GREET_LEN + i, 0, "\t\t\tx%04X:x%04X", i, memStart + i,
+  mvwprintw(debug, GREET_LEN + i, 0, "\t\t\tx%04X:x%04X", memStart + i,
       mem[memStart + i]);
   wrefresh(debug);
 }
@@ -102,6 +102,25 @@ char getChar() {
   wmove(input, IN_CUR_Y, IN_CUR_X);
   char ch = wgetch(input);
   return 0;
+}
+
+void getString(char *str, int length) {
+  mvwprintw(input, 0, 0, "Input: ");
+  wrefresh(input);
+  char ch;
+  int i;
+  for (i = 0; i < length; i++) {
+    str[i] = '\0';
+  }
+  i = 0;
+  wmove(input, IN_CUR_Y, IN_CUR_X);
+  ch = wgetch(input);
+  str[i++] = ch;
+  while(ch != '\n') {
+    ch = wgetch(input);
+    str[i++] = ch;
+  }
+  str[i] = '\0';
 }
 
 void endUI() {

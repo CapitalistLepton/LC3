@@ -7,6 +7,7 @@
 
 #define NUM_REGISTERS 8
 #define SIZE_OF_MEM 32
+#define MAX_STR_LEN 100
 
 #define SIGN_BIT_9 0x200
 #define SIGN_EXTEND_9 0xFC00
@@ -67,5 +68,6 @@ Register sext6(Register reg);
 Register sext5(Register reg);
 int controller(CPU_s *cpu, ALU_s *alu);
 void printStatus(CPU_s *cpu, ALU_s *alu);
+void load(char *filename);
 
 #endif

@@ -8,30 +8,47 @@
 unsigned short mem[SIZE_OF_MEM];
 
 int main(int argc, char *argv[]) {
-  startUI();
-
   int i;
-  int line = 0;
   CPU_s *cpu = (CPU_s *) malloc(sizeof(CPU_s));
   ALU_s *alu = (ALU_s *) malloc(sizeof(ALU_s));
-  FILE *in = fopen(argv[1], "r");
+  char filename[MAX_STR_LEN];
 
   cpu->pc = 0;
   cpu->ir = 0;
   cpu->sext = 0;
   cpu->mar = 0;
   cpu->mdr = 0;
+  cpu->n = 0;
+  cpu->z = 0;
+  cpu->p = 0;
   for (i = 0; i < NUM_REGISTERS; i++) {
     cpu->regFile[i] = 0;
   }
-  // Read in memory
-  while (line < SIZE_OF_MEM && fscanf(in, "0x%hX\n", &mem[line++]) != EOF);
-  displayDebug(cpu, alu, 0, mem);
-  getch();
-  endUI();
-//  controller(cpu, alu);
 
-  return 0;
+  startUI();
+  for (;;) {
+    char sel = getSelection();
+    switch(sel) {
+      case '1':
+        putString("Enter the filename above");
+        getString(filename, MAX_STR_LEN); // TODO fix this
+        load("input.txt"); // TODO use filename here
+        cpu->pc = 0;
+        break;
+      case '2':
+        // TODO Run
+        break;
+      case '3':
+        // TODO Step
+        break;
+      case '5':
+        displayDebug(cpu, alu, cpu->pc, mem);
+        break;
+      case '9':
+        endUI();
+        return 0;
+    }
+  }
 }
 
 int controller(CPU_s *cpu, ALU_s *alu) {
@@ -216,6 +233,15 @@ void printStatus(CPU_s *cpu, ALU_s *alu) {
   for (i = 0; i < SIZE_OF_MEM; i++) {
     printf("0x%04X  0x%04X\n", i, mem[i]);
   }
+}
+
+void load(char *filename) {
+  FILE *in = fopen(filename, "r");
+  char str[10];
+  int line = 0;
+  while(line < SIZE_OF_MEM && fscanf(in, "0x%hX\n", &mem[line++]) != EOF);
+
+  fclose(in);
 }
 
 Register sext5(Register reg) {

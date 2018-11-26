@@ -33,6 +33,7 @@ char getSelection();
 void putString(char *str);
 void outChar(char ch);
 char getChar();
+void getString(char *str, int length);
 void endUI();
 
 #endif

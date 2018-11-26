@@ -9,41 +9,60 @@
 unsigned short mem[SIZE_OF_MEM];
 
 int main(int argc, char *argv[]) {
-  startUI();
-
   int i;
-  int line = 0;
   CPU_s *cpu = (CPU_s *) malloc(sizeof(CPU_s));
   ALU_s *alu = (ALU_s *) malloc(sizeof(ALU_s));
-  FILE *in = fopen(argv[1], "r");
+  char filename[MAX_STR_LEN];
 
   cpu->pc = 0;
   cpu->ir = 0;
   cpu->sext = 0;
   cpu->mar = 0;
   cpu->mdr = 0;
+  cpu->n = 0;
+  cpu->z = 0;
+  cpu->p = 0;
   for (i = 0; i < NUM_REGISTERS; i++) {
     cpu->regFile[i] = 0;
   }
-  // Read in memory
-  while (line < SIZE_OF_MEM && fscanf(in, "0x%hX\n", &mem[line++]) != EOF);
-  displayDebug(cpu, alu, 0, mem);
-  getch();
-  endUI();
-//  controller(cpu, alu);
 
-  return 0;
+  startUI();
+  for (;;) {
+    char sel = getSelection();
+    switch (sel) {
+      case '1':
+        putString("Enter the filename above");
+        getString(filename, MAX_STR_LEN);
+        load(filename);
+        cpu->pc = 0;
+        break;
+      case '2':
+        run(cpu, alu);
+        break;
+      case '3':
+        runStep(cpu, alu);
+        break;
+      case '5':
+        displayDebug(cpu, alu, cpu->pc, mem);
+        break;
+      case '9':
+        endUI();
+        return 0;
+    }
+  }
 }
 
-int controller(CPU_s *cpu, ALU_s *alu) {
-  unsigned short opcode, dr, sr1, sr2, nzp, immed5, PCoffest9;
+void run(CPU_s *cpu, ALU_s *alu) {
+  while(runStep(cpu, alu) != HALT);
+}
+
+int runStep(CPU_s *cpu, ALU_s *alu) {
+  unsigned short opcode, dr, sr1, sr2, immed5, PCoffset9;
   unsigned char n, z, p; n = z = p = 0;
   int state = FETCH;
-
-  for (;;) {
+  do {
     switch (state) {
       case FETCH:
-        printf("Here in FETCH\n");
         cpu->mar = cpu->pc;
         cpu->pc++;
         cpu->mdr = mem[cpu->mar];
@@ -51,12 +70,10 @@ int controller(CPU_s *cpu, ALU_s *alu) {
         state = DECODE;
         break;
       case DECODE:
-        printf("Here in DECODE\n");
         opcode = cpu->ir >> OPCODE_SHIFT;
         state = EVAL_ADDR;
         break;
       case EVAL_ADDR:
-        printf("Here in EVAL_ADDR\n");
         switch (opcode) {
           case ADD:
             dr = cpu->ir >> DR_SHIFT & LAST3;
@@ -151,7 +168,6 @@ int controller(CPU_s *cpu, ALU_s *alu) {
         state = FETCH_OP;
         break;
       case FETCH_OP:
-        printf("Here in FETCH_OP\n");
         switch (opcode) {
           case ADD:
             alu->a = cpu->regFile[sr1];
@@ -207,7 +223,6 @@ int controller(CPU_s *cpu, ALU_s *alu) {
         state = EXECUTE;
         break;
       case EXECUTE:
-        printf("Here in EXECUTE\n");
         switch (opcode) {
           case ADD:
             alu->r = alu->a + alu->b;
@@ -226,11 +241,22 @@ int controller(CPU_s *cpu, ALU_s *alu) {
             alu->r = alu->a + alu->b;
 			cpu->pc = alu->r;
             break;
+          case TRAP:
+            switch(cpu->ir & LAST8) {
+              case GETC:
+                sr1 = getChar();
+                cpu->regFile[0] = sr1;
+                break;
+              case OUT:
+                outChar(cpu->regFile[0]);
+              case HALT:
+                return HALT;
+            }
+            break;
         }
         state = STORE;
         break;
       case STORE:
-        printf("Here in STORE\n");
         switch (opcode) {
           case ADD:
           case AND:
@@ -249,33 +275,17 @@ int controller(CPU_s *cpu, ALU_s *alu) {
         state = FETCH;
         break;
     }
-    printStatus(cpu, alu);
-    if (cpu->pc >= SIZE_OF_MEM) { // HALT at end of memory
-      exit(0);
-    }
-  }
+  } while (state != FETCH); 
+  return 0;
 }
 
-void printStatus(CPU_s *cpu, ALU_s *alu) {
-  int i;
-  printf("Registers:\n");
-  for (i = 0; i < NUM_REGISTERS; i++) {
-    printf("R%d:  0x%04X\n", i, cpu->regFile[i]);
-  }
-  printf("PC:  0x%04X\n", cpu->pc);
-  printf("IR:  0x%04X\n", cpu->ir);
-  printf("SEXT:0x%04X\n", cpu->sext);
-  printf("MAR: 0x%04X\n", cpu->mar);
-  printf("MDR: 0x%04X\n", cpu->mdr);
-  printf("A:   0x%04X\n", alu->a);
-  printf("B:   0x%04X\n", alu->b);
-  printf("R:   0x%04X\n", alu->r);
-  printf("\n");
-  printf("Memory:\n");
-  printf("Addr:   Contents:\n");
-  for (i = 0; i < SIZE_OF_MEM; i++) {
-    printf("0x%04X  0x%04X\n", i, mem[i]);
-  }
+void load(char *filename) {
+  FILE *in = fopen(filename, "r");
+  char str[10];
+  int line = 0;
+  while(line < SIZE_OF_MEM && fscanf(in, "0x%hX\n", &mem[line++]) != EOF);
+
+  fclose(in);
 }
 
 void nzpCheck(CPU_s *cpu, Register reg) {

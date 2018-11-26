@@ -31,8 +31,8 @@ int main(int argc, char *argv[]) {
     switch (sel) {
       case '1':
         putString("Enter the filename above");
-        getString(filename, MAX_STR_LEN); // TODO fix this
-        load("input.txt"); // TODO use filename here
+        getString(filename, MAX_STR_LEN);
+        load(filename);
         cpu->pc = 0;
         break;
       case '2':

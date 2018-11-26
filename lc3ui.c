@@ -85,27 +85,39 @@ void displayDebug(CPU_s *cpu, ALU_s *alu, int memStart, unsigned short mem[]) {
 }
 
 char getSelection() {
+  char choice;
+/*  wprintw(selection, "Select: 1) Load, 2) Run, 3) Step, 5) Display Mem, 9) Exit\n");
+  wprintw(selection, "> "); */
   wmove(selection, SELECT_CUR_Y, SELECT_CUR_X);
-  char choice = wgetch(selection);
+  wclrtoeol(selection);
+  choice = wgetch(selection);
   return choice;
 }
 
 void putString(char *str) {
+  wclear(output);
   wprintw(output, "Output: %s", str);
+  wrefresh(output);
 }
 
 void outChar(char ch) {
+  wclear(output);
   wprintw(output, "Output: %c", ch);
+  wrefresh(output);
 }
 
 char getChar() {
+  wclear(input);
+  wprintw(input, "Input: ");
+  wrefresh(input);
   wmove(input, IN_CUR_Y, IN_CUR_X);
   char ch = wgetch(input);
   return 0;
 }
 
 void getString(char *str, int length) {
-  mvwprintw(input, 0, 0, "Input: ");
+  wclear(input);
+  wprintw(input, "Input: ");
   wrefresh(input);
   char ch;
   int i;
@@ -120,7 +132,7 @@ void getString(char *str, int length) {
     ch = wgetch(input);
     str[i++] = ch;
   }
-  str[i] = '\0';
+  str[--i] = '\0';
 }
 
 void endUI() {

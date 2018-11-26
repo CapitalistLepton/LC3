@@ -19,6 +19,7 @@
 #define LAST3 0x7
 #define LAST5 0x1F
 #define LAST6 0x3F
+#define LAST8 0xFF
 #define LAST9 0x1FF
 
 #define ADD_IMMED 0x20
@@ -35,6 +36,14 @@
 #define NOT 9
 #define JMP 12
 #define LEA 14
+#define TRAP 15
+
+#define GETC 32
+#define OUT 33
+#define PUTS 34
+#define IN 35
+#define PUSTP 36
+#define HALT 37
 
 #define FETCH 0
 #define DECODE 1
@@ -66,8 +75,8 @@ typedef struct cpu_s {
 Register sext9(Register reg);
 Register sext6(Register reg);
 Register sext5(Register reg);
-int controller(CPU_s *cpu, ALU_s *alu);
-void printStatus(CPU_s *cpu, ALU_s *alu);
+void run(CPU_s *cpu, ALU_s *alu);
+int runStep(CPU_s *cpu, ALU_s *alu);
 void load(char *filename);
 
 #endif

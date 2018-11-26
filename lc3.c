@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
   startUI();
   for (;;) {
     char sel = getSelection();
-    switch(sel) {
+    switch (sel) {
       case '1':
         putString("Enter the filename above");
         getString(filename, MAX_STR_LEN); // TODO fix this
@@ -36,10 +36,10 @@ int main(int argc, char *argv[]) {
         cpu->pc = 0;
         break;
       case '2':
-        // TODO Run
+        run(cpu, alu);
         break;
       case '3':
-        // TODO Step
+        runStep(cpu, alu);
         break;
       case '5':
         displayDebug(cpu, alu, cpu->pc, mem);
@@ -51,13 +51,16 @@ int main(int argc, char *argv[]) {
   }
 }
 
-int controller(CPU_s *cpu, ALU_s *alu) {
+void run(CPU_s *cpu, ALU_s *alu) {
+  while(runStep(cpu, alu) != HALT);
+}
+
+int runStep(CPU_s *cpu, ALU_s *alu) {
   unsigned short opcode, dr, sr1, sr2;
   int state = FETCH;
-  for (;;) {
+  do {
     switch (state) {
       case FETCH:
-        printf("Here in FETCH\n");
         cpu->mar = cpu->pc;
         cpu->pc++;
         cpu->mdr = mem[cpu->mar];
@@ -65,12 +68,10 @@ int controller(CPU_s *cpu, ALU_s *alu) {
         state = DECODE;
         break;
       case DECODE:
-        printf("Here in DECODE\n");
         opcode = cpu->ir >> OPCODE_SHIFT;
         state = EVAL_ADDR;
         break;
       case EVAL_ADDR:
-        printf("Here in EVAL_ADDR\n");
         switch (opcode) {
           case ADD:
             dr = cpu->ir >> DR_SHIFT & LAST3;
@@ -135,7 +136,6 @@ int controller(CPU_s *cpu, ALU_s *alu) {
         state = FETCH_OP;
         break;
       case FETCH_OP:
-        printf("Here in FETCH_OP\n");
         switch (opcode) {
           case ADD:
             alu->a = cpu->regFile[sr1];
@@ -172,7 +172,6 @@ int controller(CPU_s *cpu, ALU_s *alu) {
         state = EXECUTE;
         break;
       case EXECUTE:
-        printf("Here in EXECUTE\n");
         switch (opcode) {
           case ADD:
             alu->r = alu->a + alu->b;
@@ -183,11 +182,22 @@ int controller(CPU_s *cpu, ALU_s *alu) {
           case NOT:
             alu->r = ~alu->a;
             break;
+          case TRAP:
+            switch(cpu->ir & LAST8) {
+              case GETC:
+                sr1 = getChar();
+                cpu->regFile[0] = sr1;
+                break;
+              case OUT:
+                outChar(cpu->regFile[0]);
+              case HALT:
+                return HALT;
+            }
+            break;
         }
         state = STORE;
         break;
       case STORE:
-        printf("Here in STORE\n");
         switch (opcode) {
           case ADD:
           case AND:
@@ -206,33 +216,8 @@ int controller(CPU_s *cpu, ALU_s *alu) {
         state = FETCH;
         break;
     }
-    printStatus(cpu, alu);
-    if (cpu->pc >= SIZE_OF_MEM) { // HALT at end of memory
-      exit(0);
-    }
-  }
-}
-
-void printStatus(CPU_s *cpu, ALU_s *alu) {
-  int i;
-  printf("Registers:\n");
-  for (i = 0; i < NUM_REGISTERS; i++) {
-    printf("R%d:  0x%04X\n", i, cpu->regFile[i]);
-  }
-  printf("PC:  0x%04X\n", cpu->pc);
-  printf("IR:  0x%04X\n", cpu->ir);
-  printf("SEXT:0x%04X\n", cpu->sext);
-  printf("MAR: 0x%04X\n", cpu->mar);
-  printf("MDR: 0x%04X\n", cpu->mdr);
-  printf("A:   0x%04X\n", alu->a);
-  printf("B:   0x%04X\n", alu->b);
-  printf("R:   0x%04X\n", alu->r);
-  printf("\n");
-  printf("Memory:\n");
-  printf("Addr:   Contents:\n");
-  for (i = 0; i < SIZE_OF_MEM; i++) {
-    printf("0x%04X  0x%04X\n", i, mem[i]);
-  }
+  } while (state != FETCH); 
+  return 0;
 }
 
 void load(char *filename) {

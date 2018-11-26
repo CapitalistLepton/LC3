@@ -2,7 +2,7 @@
 #include "lc3ui.h"
 
 /*
- * Zane Littrell, Luke Gillmore, Trenton Greevebiester, Veronica Gross
+ * Zane Littrell, Luke Gillmore, Trenton Greevebiester
  * Final Project
  */
 
@@ -77,6 +77,7 @@ int controller(CPU_s *cpu, ALU_s *alu) {
             alu->a = cpu->pc;
             alu->b = sr1;
             alu->r = alu->a + alu->b;
+			nzpCheck(cpu, r);
             break;
           case ST:
             sr1 = cpu->ir >> DR_SHIFT & LAST3;
@@ -106,6 +107,7 @@ int controller(CPU_s *cpu, ALU_s *alu) {
             alu->a = cpu->regFile[sr1];
             alu->b = sr2;
             alu->r = alu->a + alu->b;
+			nzpCheck(cpu, r);
             break;
           case NOT:
             dr = cpu->ir >> DR_SHIFT & LAST3;
@@ -122,6 +124,14 @@ int controller(CPU_s *cpu, ALU_s *alu) {
             alu->a = cpu->pc;
             alu->b = sr1;
             alu->r = alu->a + alu->b;
+			nzpCheck(cpu, r);
+            break;
+		  case JSR:
+			if (cpu->ir & JSR_IMMED) { 
+              cpu->sext = sext11(cpu->ir & LAST11);
+            } else {
+			  sr1 = cpu->ir >> SR1_SHIFT & LAST3;
+            }
             break;
             case BR:
 
@@ -174,17 +184,25 @@ int controller(CPU_s *cpu, ALU_s *alu) {
           case JMP:
             cpu->pc = cpu->regFile[sr1];
             break;
-            case BR:
-              if( (n & cpu->n) || (z & cpu->z) || (p & cpu->p) ) {
-                cpu->pc = cpu->sext + cpu->pc;
-              }
-              cpu->n = cpu->z = cpu->p = n = z = p = 0;
-              break;
-            case TRAP:
-              if (cpu->pc == TRAPVECT8) {
-                printf("%s\n","HALTING PROGRAM");
-                exit(0);
-              }
+          case BR:
+            if( (n & cpu->n) || (z & cpu->z) || (p & cpu->p) ) {
+              cpu->pc = cpu->sext + cpu->pc;
+            }
+            cpu->n = cpu->z = cpu->p = n = z = p = 0;
+            break;
+          case TRAP:
+            if (cpu->pc == TRAPVECT8) {
+              printf("%s\n","HALTING PROGRAM");
+              exit(0);
+            }
+          case JSR:
+            if (cpu->ir & JSR_IMMED) { 
+              alu->a = cpu->pc;
+	      alu->b = cpu->sext;
+            } else {
+              alu->a = ZERO;
+	      alu->b = cpu->regFile[sr1];
+            }
         }
         state = EXECUTE;
         break;
@@ -193,12 +211,20 @@ int controller(CPU_s *cpu, ALU_s *alu) {
         switch (opcode) {
           case ADD:
             alu->r = alu->a + alu->b;
+			nzpCheck(cpu, r);
             break;
           case AND:
             alu->r = alu->a & alu->b;
+			nzpCheck(cpu, r);
             break;
           case NOT:
             alu->r = ~alu->a;
+			nzpCheck(cpu, r);
+            break;
+		  case JSR:
+			cpu->regFile[R7] = cpu->pc;
+            alu->r = alu->a + alu->b;
+			cpu->pc = alu->r;
             break;
         }
         state = STORE;
@@ -252,11 +278,29 @@ void printStatus(CPU_s *cpu, ALU_s *alu) {
   }
 }
 
+void nzpCheck(CPU_s *cpu, Register reg) {
+	if (reg < 0) 
+		cpu->n = 1;
+	else
+		cpu->n = 0;
+	
+	if (reg > 0) 
+		cpu->p = 1;
+	else
+		cpu->p = 0;
+	
+	if (reg == 0) 
+		cpu->z = 1;
+	else
+		cpu->z = 0;
+}
+
 /*
  * Input the register, the signed bit to check, and the
  * amount of the signed extension that is required.
  */
 Register sext(Register reg, Register signBit, Register signExtend) {
+
   Register out = reg;
   if (reg & signBit) {
     out |= signExtend; // Set first 9 bits is negative

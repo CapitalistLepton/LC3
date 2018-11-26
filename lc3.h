@@ -8,19 +8,28 @@
 #define NUM_REGISTERS 8
 #define SIZE_OF_MEM 32
 
-#define SIGN_BIT_9 0x200
-#define SIGN_EXTEND_9 0xFC00
-#define SIGN_BIT_5 0x20
-#define SIGN_EXTEND_5 0xFFC0
-#define SIGN_BIT_6 0x40
-#define SIGN_EXTEND_6 0xFF80
+#define SIGN_BIT_9 0x100
+#define SIGN_EXTEND_9 0xFE00
+#define SIGN_BIT_5 0x10
+#define SIGN_EXTEND_5 0xFFE0
+#define SIGN_BIT_6 0x20
+#define SIGN_EXTEND_6 0xFFC0
+#define SIGN_BIT_11 0x400
+#define SIGN_EXTEND_11 0xF800
 
 #define LAST3 0x7
 #define LAST5 0x1F
 #define LAST6 0x3F
 #define LAST9 0x1FF
+#define LAST11 0x7FF
+
+#define R7 7
+#define ZERO 0
+
+
 
 #define ADD_IMMED 0x20
+#define JSR_IMMED 0x800
 
 #define TRAPVECT8 0x0019
 
@@ -32,6 +41,7 @@
 #define BR 0
 #define ADD 1
 #define LD 2
+#define JSR 4
 #define ST 3
 #define AND 5
 #define LDR 6

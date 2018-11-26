@@ -1,4 +1,5 @@
 #include "lc3.h"
+#include "lc3ui.h"
 
 /*
  * Zane Littrell, Luke Gillmore, Trenton Greevebiester, Veronica Gross
@@ -35,8 +36,10 @@ int main(int argc, char *argv[]) {
 }
 
 int controller(CPU_s *cpu, ALU_s *alu) {
-  unsigned short opcode, dr, sr1, sr2;
+  unsigned short opcode, dr, sr1, sr2, nzp, immed5, PCoffest9;
+  unsigned char n, z, p; n = z = p = 0;
   int state = FETCH;
+
   for (;;) {
     switch (state) {
       case FETCH:
@@ -59,7 +62,8 @@ int controller(CPU_s *cpu, ALU_s *alu) {
             dr = cpu->ir >> DR_SHIFT & LAST3;
             sr1 = cpu->ir >> SR1_SHIFT & LAST3;
             if (cpu->ir & ADD_IMMED) {
-              cpu->sext = sext5(cpu->ir & LAST5);
+              immed5 = cpu->ir & LAST5;
+              cpu->sext = sext(immed5, SIGN_BIT_5, SIGN_EXTEND_5);
               sr2 = cpu->sext;
             } else {
               sr2 = cpu->ir & LAST3;
@@ -67,7 +71,8 @@ int controller(CPU_s *cpu, ALU_s *alu) {
             break;
           case LD:
             dr = cpu->ir >> DR_SHIFT & LAST3;
-            cpu->sext = sext9(cpu->ir & LAST9);
+            PCoffest9 = cpu->ir & LAST9;
+            cpu->sext = sext(PCoffest9, SIGN_BIT_9, SIGN_EXTEND_9);
             sr1 = cpu->sext;
             alu->a = cpu->pc;
             alu->b = sr1;
@@ -75,7 +80,8 @@ int controller(CPU_s *cpu, ALU_s *alu) {
             break;
           case ST:
             sr1 = cpu->ir >> DR_SHIFT & LAST3;
-            cpu->sext = sext9(cpu->ir & LAST9);
+             PCoffest9 = cpu->ir & LAST9;
+             cpu->sext = sext(PCoffest9, SIGN_BIT_9, SIGN_EXTEND_9);
             alu->a = cpu->pc;
             alu->b = cpu->sext;
             alu->r = alu->a + alu->b;
@@ -84,7 +90,8 @@ int controller(CPU_s *cpu, ALU_s *alu) {
             dr = cpu->ir >> DR_SHIFT & LAST3;
             sr1 = cpu->ir >> SR1_SHIFT & LAST3;
             if (cpu->ir & ADD_IMMED) { // ADD and AND use same bit to show immediate values
-              cpu->sext = sext5(cpu->ir & LAST5);
+              immed5 = cpu->ir & LAST5;
+              cpu->sext = sext(immed5, SIGN_BIT_5, SIGN_EXTEND_5);
               sr2 = cpu->sext;
             } else {
               sr2 = cpu->ir & LAST3;
@@ -93,7 +100,8 @@ int controller(CPU_s *cpu, ALU_s *alu) {
           case LDR:
             dr = cpu->ir >> DR_SHIFT & LAST3;
             sr1 = cpu->ir >> SR1_SHIFT & LAST3;
-            cpu->sext = sext6(cpu->ir & LAST6);
+            immed5 = cpu->ir & LAST6;
+            cpu->sext = sext(immed5, SIGN_BIT_6, SIGN_EXTEND_6);
             sr2 = cpu->sext;
             alu->a = cpu->regFile[sr1];
             alu->b = sr2;
@@ -108,12 +116,27 @@ int controller(CPU_s *cpu, ALU_s *alu) {
             break;
           case LEA:
             dr = cpu->ir >> DR_SHIFT & LAST3;
-            cpu->sext = sext9(cpu->ir & LAST9);
+            PCoffest9 = cpu->ir & LAST9;
+            cpu->sext = sext(PCoffest9, SIGN_BIT_9, SIGN_EXTEND_9);
             sr1 = cpu->sext;
             alu->a = cpu->pc;
             alu->b = sr1;
             alu->r = alu->a + alu->b;
             break;
+            case BR:
+
+              nzp = cpu->ir >> DR_SHIFT & LAST3;
+                PCoffest9 = cpu->ir & LAST9;
+                cpu->sext = sext(PCoffest9, SIGN_BIT_9, SIGN_EXTEND_9);
+                n = (nzp & 4) ?  1 : 0;
+                z = (nzp & 2) ?  1 : 0;
+                p = (nzp & 1) ?  1 : 0;
+
+            case TRAP:
+              cpu->pc = cpu->ir & TRAPVECT8;
+
+
+              break;
         }
         state = FETCH_OP;
         break;
@@ -139,7 +162,7 @@ int controller(CPU_s *cpu, ALU_s *alu) {
             break;
           case AND:
             alu->a = cpu->regFile[sr1];
-            if(cpu->ir & ADD_IMMED){
+            if(cpu->ir & ADD_IMMED) {
                 alu->b = sr2;
             } else {
                 alu->b = cpu->regFile[sr2];
@@ -151,6 +174,17 @@ int controller(CPU_s *cpu, ALU_s *alu) {
           case JMP:
             cpu->pc = cpu->regFile[sr1];
             break;
+            case BR:
+              if( (n & cpu->n) || (z & cpu->z) || (p & cpu->p) ) {
+                cpu->pc = cpu->sext + cpu->pc;
+              }
+              cpu->n = cpu->z = cpu->p = n = z = p = 0;
+              break;
+            case TRAP:
+              if (cpu->pc == TRAPVECT8) {
+                printf("%s\n","HALTING PROGRAM");
+                exit(0);
+              }
         }
         state = EXECUTE;
         break;
@@ -218,26 +252,14 @@ void printStatus(CPU_s *cpu, ALU_s *alu) {
   }
 }
 
-Register sext5(Register reg) {
+/*
+ * Input the register, the signed bit to check, and the
+ * amount of the signed extension that is required.
+ */
+Register sext(Register reg, Register signBit, Register signExtend) {
   Register out = reg;
-  if (reg & SIGN_BIT_5) {
-    out |= SIGN_EXTEND_5;
-  }
-  return out;
-}
-
-Register sext6(Register reg) {
-  Register out = reg;
-  if (reg & SIGN_BIT_6) {
-    out |= SIGN_EXTEND_6;
-  }
-  return out;
-}
-
-Register sext9(Register reg) {
-  Register out = reg;
-  if (reg & SIGN_BIT_9) {
-    out |= SIGN_EXTEND_9;
+  if (reg & signBit) {
+    out |= signExtend; // Set first 9 bits is negative
   }
   return out;
 }

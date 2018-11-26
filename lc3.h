@@ -22,10 +22,14 @@
 
 #define ADD_IMMED 0x20
 
+#define TRAPVECT8 0x0019
+
+
 #define OPCODE_SHIFT 12
 #define DR_SHIFT 9 
 #define SR1_SHIFT 6
 
+#define BR 0
 #define ADD 1
 #define LD 2
 #define ST 3
@@ -34,6 +38,7 @@
 #define NOT 9
 #define JMP 12
 #define LEA 14
+#define TRAP 15
 
 #define FETCH 0
 #define DECODE 1
@@ -62,6 +67,7 @@ typedef struct cpu_s {
   unsigned char p;
 } CPU_s;
 
+Register sext(Register reg, Register signBit, Register signExtend);
 Register sext9(Register reg);
 Register sext6(Register reg);
 Register sext5(Register reg);

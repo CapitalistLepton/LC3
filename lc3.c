@@ -2,254 +2,310 @@
 #include "lc3ui.h"
 
 /*
- * Zane Littrell, Luke Gillmore, Trenton Greevebiester, Veronica Gross
+ * Zane Littrell, Luke Gillmore, Trenton Greevebiester
  * Final Project
  */
 
 unsigned short mem[SIZE_OF_MEM];
 
 int main(int argc, char *argv[]) {
-  startUI();
-
   int i;
-  int line = 0;
   CPU_s *cpu = (CPU_s *) malloc(sizeof(CPU_s));
   ALU_s *alu = (ALU_s *) malloc(sizeof(ALU_s));
-  FILE *in = fopen(argv[1], "r");
+  char filename[MAX_STR_LEN];
 
   cpu->pc = 0;
   cpu->ir = 0;
   cpu->sext = 0;
   cpu->mar = 0;
   cpu->mdr = 0;
+  cpu->n = 0;
+  cpu->z = 0;
+  cpu->p = 0;
   for (i = 0; i < NUM_REGISTERS; i++) {
     cpu->regFile[i] = 0;
   }
-  // Read in memory
-  while (line < SIZE_OF_MEM && fscanf(in, "0x%hX\n", &mem[line++]) != EOF);
-  displayDebug(cpu, alu, 0, mem);
-  getch();
-  endUI();
-//  controller(cpu, alu);
 
-  return 0;
+  startUI();
+  for (;;) {
+    char sel = getSelection();
+    switch (sel) {
+      case '1':
+        putString("Enter the filename above");
+            getString(filename, MAX_STR_LEN);
+            load(filename);
+            cpu->pc = 0;
+            break;
+      case '2':
+        run(cpu, alu);
+            break;
+      case '3':
+        runStep(cpu, alu);
+            break;
+      case '5':
+        displayDebug(cpu, alu, cpu->pc, mem);
+            break;
+      case '9':
+        endUI();
+            return 0;
+    }
+  }
 }
 
-int controller(CPU_s *cpu, ALU_s *alu) {
-  unsigned short opcode, dr, sr1, sr2, nzp, immed5, PCoffest9;
+void run(CPU_s *cpu, ALU_s *alu) {
+  while(runStep(cpu, alu) != HALT);
+}
+
+int runStep(CPU_s *cpu, ALU_s *alu) {
+  unsigned short opcode, dr, sr1, sr2, nzp, imm5, PCoffset;
   unsigned char n, z, p; n = z = p = 0;
   int state = FETCH;
-
-  for (;;) {
+  do {
     switch (state) {
       case FETCH:
-        printf("Here in FETCH\n");
         cpu->mar = cpu->pc;
-        cpu->pc++;
-        cpu->mdr = mem[cpu->mar];
-        cpu->ir = cpu->mdr;
-        state = DECODE;
-        break;
+            cpu->pc++;
+            cpu->mdr = mem[cpu->mar];
+            cpu->ir = cpu->mdr;
+            state = DECODE;
+            break;
       case DECODE:
-        printf("Here in DECODE\n");
         opcode = cpu->ir >> OPCODE_SHIFT;
-        state = EVAL_ADDR;
-        break;
+            state = EVAL_ADDR;
+            break;
       case EVAL_ADDR:
-        printf("Here in EVAL_ADDR\n");
         switch (opcode) {
           case ADD:
             dr = cpu->ir >> DR_SHIFT & LAST3;
-            sr1 = cpu->ir >> SR1_SHIFT & LAST3;
-            if (cpu->ir & ADD_IMMED) {
-              immed5 = cpu->ir & LAST5;
-              cpu->sext = sext(immed5, SIGN_BIT_5, SIGN_EXTEND_5);
-              sr2 = cpu->sext;
-            } else {
-              sr2 = cpu->ir & LAST3;
-            }
-            break;
+                sr1 = cpu->ir >> SR1_SHIFT & LAST3;
+                if (cpu->ir & ADD_IMMED) {
+                  imm5 = cpu->ir & LAST5;
+                  cpu->sext = sext(imm5, SIGN_BIT_5, SIGN_EXTEND_5);
+                  sr2 = cpu->sext;
+                } else {
+                  sr2 = cpu->ir & LAST3;
+                }
+                break;
           case LD:
             dr = cpu->ir >> DR_SHIFT & LAST3;
-            PCoffest9 = cpu->ir & LAST9;
-            cpu->sext = sext(PCoffest9, SIGN_BIT_9, SIGN_EXTEND_9);
-            sr1 = cpu->sext;
-            alu->a = cpu->pc;
-            alu->b = sr1;
-            alu->r = alu->a + alu->b;
-            break;
+                PCoffset = cpu->ir & LAST9;
+                cpu->sext = sext(PCoffset, SIGN_BIT_9, SIGN_EXTEND_9);
+                sr1 = cpu->sext;
+                alu->a = cpu->pc;
+                alu->b = sr1;
+                alu->r = alu->a + alu->b;
+                nzpCheck(cpu, alu->r);
+                break;
           case ST:
             sr1 = cpu->ir >> DR_SHIFT & LAST3;
-             PCoffest9 = cpu->ir & LAST9;
-             cpu->sext = sext(PCoffest9, SIGN_BIT_9, SIGN_EXTEND_9);
-            alu->a = cpu->pc;
-            alu->b = cpu->sext;
-            alu->r = alu->a + alu->b;
-            break;
+                PCoffset = cpu->ir & LAST9;
+                cpu->sext = sext(PCoffset, SIGN_BIT_9, SIGN_EXTEND_9);
+                alu->a = cpu->pc;
+                alu->b = cpu->sext;
+                alu->r = alu->a + alu->b;
+                break;
           case AND:
             dr = cpu->ir >> DR_SHIFT & LAST3;
-            sr1 = cpu->ir >> SR1_SHIFT & LAST3;
-            if (cpu->ir & ADD_IMMED) { // ADD and AND use same bit to show immediate values
-              immed5 = cpu->ir & LAST5;
-              cpu->sext = sext(immed5, SIGN_BIT_5, SIGN_EXTEND_5);
-              sr2 = cpu->sext;
-            } else {
-              sr2 = cpu->ir & LAST3;
-            }
-            break;
+                sr1 = cpu->ir >> SR1_SHIFT & LAST3;
+                if (cpu->ir & ADD_IMMED) { // ADD and AND use same bit to show immediate values
+                  imm5 = cpu->ir & LAST5;
+                  cpu->sext = sext(imm5, SIGN_BIT_5, SIGN_EXTEND_5);
+                  sr2 = cpu->sext;
+                } else {
+                  sr2 = cpu->ir & LAST3;
+                }
+                break;
           case LDR:
             dr = cpu->ir >> DR_SHIFT & LAST3;
-            sr1 = cpu->ir >> SR1_SHIFT & LAST3;
-            immed5 = cpu->ir & LAST6;
-            cpu->sext = sext(immed5, SIGN_BIT_6, SIGN_EXTEND_6);
-            sr2 = cpu->sext;
-            alu->a = cpu->regFile[sr1];
-            alu->b = sr2;
-            alu->r = alu->a + alu->b;
-            break;
+                sr1 = cpu->ir >> SR1_SHIFT & LAST3;
+                imm5 = cpu->ir & LAST6;
+                cpu->sext = sext(imm5, SIGN_BIT_6, SIGN_EXTEND_6);
+                sr2 = cpu->sext;
+                alu->a = cpu->regFile[sr1];
+                alu->b = sr2;
+                alu->r = alu->a + alu->b;
+                nzpCheck(cpu, alu->r);
+                break;
           case NOT:
             dr = cpu->ir >> DR_SHIFT & LAST3;
-            sr1 = cpu->ir >> SR1_SHIFT & LAST3;
-            break;
+                sr1 = cpu->ir >> SR1_SHIFT & LAST3;
+                break;
           case JMP:
             sr1 = cpu->ir >> SR1_SHIFT & LAST3;
-            break;
+                break;
           case LEA:
             dr = cpu->ir >> DR_SHIFT & LAST3;
-            PCoffest9 = cpu->ir & LAST9;
-            cpu->sext = sext(PCoffest9, SIGN_BIT_9, SIGN_EXTEND_9);
-            sr1 = cpu->sext;
-            alu->a = cpu->pc;
-            alu->b = sr1;
-            alu->r = alu->a + alu->b;
-            break;
-            case BR:
+                PCoffset = cpu->ir & LAST9;
+                cpu->sext = sext(PCoffset, SIGN_BIT_9, SIGN_EXTEND_9);
+                sr1 = cpu->sext;
+                alu->a = cpu->pc;
+                alu->b = sr1;
+                alu->r = alu->a + alu->b;
+                nzpCheck(cpu, alu->r);
+                break;
+          case JSR:
+            if (cpu->ir & JSR_IMMED) {
+              PCoffset = cpu->ir & LAST11;
+              cpu->sext = sext(PCoffset, SIGN_BIT_11, SIGN_EXTEND_11);
+            } else {
+              sr1 = cpu->ir >> SR1_SHIFT & LAST3;
+            }
+                break;
+          case BR:
 
-              nzp = cpu->ir >> DR_SHIFT & LAST3;
-                PCoffest9 = cpu->ir & LAST9;
-                cpu->sext = sext(PCoffest9, SIGN_BIT_9, SIGN_EXTEND_9);
+            nzp = cpu->ir >> DR_SHIFT & LAST3;
+                PCoffset = cpu->ir & LAST9;
+                cpu->sext = sext(PCoffset, SIGN_BIT_9, SIGN_EXTEND_9);
                 n = (nzp & 4) ?  1 : 0;
                 z = (nzp & 2) ?  1 : 0;
                 p = (nzp & 1) ?  1 : 0;
 
-            case TRAP:
-              cpu->pc = cpu->ir & TRAPVECT8;
-
-
-              break;
+          case TRAP:
+            cpu->regFile[7] = cpu->pc;
+                cpu->pc = cpu->ir & LAST8;
+                break;
         }
-        state = FETCH_OP;
-        break;
+            state = FETCH_OP;
+            break;
       case FETCH_OP:
-        printf("Here in FETCH_OP\n");
         switch (opcode) {
           case ADD:
             alu->a = cpu->regFile[sr1];
-            if (cpu->ir & ADD_IMMED) {
-              alu->b = sr2;
-            } else {
-              alu->b = cpu->regFile[sr2];
-            }
-            break;
+                if (cpu->ir & ADD_IMMED) {
+                  alu->b = sr2;
+                } else {
+                  alu->b = cpu->regFile[sr2];
+                }
+                break;
           case LD:
           case LDR:
             cpu->mar = alu->r;
-            cpu->mdr = mem[cpu->mar];
-            break;
+                cpu->mdr = mem[cpu->mar];
+                break;
           case ST:
             cpu->mar = alu->r;
-            cpu->mdr = cpu->regFile[sr1];
-            break;
+                cpu->mdr = cpu->regFile[sr1];
+                break;
           case AND:
             alu->a = cpu->regFile[sr1];
-            if(cpu->ir & ADD_IMMED) {
-                alu->b = sr2;
-            } else {
-                alu->b = cpu->regFile[sr2];
-            }
-            break;
+                if(cpu->ir & ADD_IMMED) {
+                  alu->b = sr2;
+                } else {
+                  alu->b = cpu->regFile[sr2];
+                }
+                break;
           case NOT:
             alu->a = cpu->regFile[sr1];
-            break;
+                break;
           case JMP:
             cpu->pc = cpu->regFile[sr1];
-            break;
-            case BR:
-              if( (n & cpu->n) || (z & cpu->z) || (p & cpu->p) ) {
-                cpu->pc = cpu->sext + cpu->pc;
-              }
-              cpu->n = cpu->z = cpu->p = n = z = p = 0;
-              break;
-            case TRAP:
-              if (cpu->pc == TRAPVECT8) {
-                printf("%s\n","HALTING PROGRAM");
-                exit(0);
-              }
+                break;
+          case BR:
+            if( (n & cpu->n) || (z & cpu->z) || (p & cpu->p) ) {
+              cpu->pc = cpu->sext + cpu->pc;
+            }
+                cpu->n = cpu->z = cpu->p = n = z = p = 0;
+                break;
+          case JSR:
+            if (cpu->ir & JSR_IMMED) {
+              alu->a = cpu->pc;
+              alu->b = cpu->sext;
+            } else {
+              alu->a = ZERO;
+              alu->b = cpu->regFile[sr1];
+            }
         }
-        state = EXECUTE;
-        break;
+            state = EXECUTE;
+            break;
       case EXECUTE:
-        printf("Here in EXECUTE\n");
         switch (opcode) {
           case ADD:
             alu->r = alu->a + alu->b;
-            break;
+                nzpCheck(cpu, alu->r);
+                break;
           case AND:
             alu->r = alu->a & alu->b;
-            break;
+                nzpCheck(cpu, alu->r);
+                break;
           case NOT:
             alu->r = ~alu->a;
-            break;
+                nzpCheck(cpu, alu->r);
+                break;
+          case JSR:
+            cpu->regFile[R7] = cpu->pc;
+                alu->r = alu->a + alu->b;
+                cpu->pc = alu->r;
+                break;
+          case TRAP:
+            switch(cpu->pc) {
+              case GETC:
+                sr1 = getChar();
+                    cpu->regFile[0] = sr1;
+                    cpu->pc = cpu->regFile[7];
+                    break;
+              case OUT:
+                outChar(cpu->regFile[0]);
+                    cpu->pc = cpu->regFile[7];
+                    break;
+              case PUTS:
+                // TODO all of it
+                getPuts(cpu);
+                break;
+              case HALT:
+                putString("-----HALTING PROGRAM-----");
+                    return HALT;
+            }
+                break;
         }
-        state = STORE;
-        break;
+            state = STORE;
+            break;
       case STORE:
-        printf("Here in STORE\n");
         switch (opcode) {
           case ADD:
           case AND:
           case NOT:
           case LEA:
             cpu->regFile[dr] = alu->r;
-            break;
+                break;
           case LD:
           case LDR:
             cpu->regFile[dr] = cpu->mdr;
-            break;
+                break;
           case ST:
             mem[cpu->mar] = cpu->mdr;
-            break;
+                break;
         }
-        state = FETCH;
-        break;
+            state = FETCH;
+            break;
     }
-    printStatus(cpu, alu);
-    if (cpu->pc >= SIZE_OF_MEM) { // HALT at end of memory
-      exit(0);
-    }
-  }
+  } while (state != FETCH);
+  return 0;
 }
 
-void printStatus(CPU_s *cpu, ALU_s *alu) {
-  int i;
-  printf("Registers:\n");
-  for (i = 0; i < NUM_REGISTERS; i++) {
-    printf("R%d:  0x%04X\n", i, cpu->regFile[i]);
-  }
-  printf("PC:  0x%04X\n", cpu->pc);
-  printf("IR:  0x%04X\n", cpu->ir);
-  printf("SEXT:0x%04X\n", cpu->sext);
-  printf("MAR: 0x%04X\n", cpu->mar);
-  printf("MDR: 0x%04X\n", cpu->mdr);
-  printf("A:   0x%04X\n", alu->a);
-  printf("B:   0x%04X\n", alu->b);
-  printf("R:   0x%04X\n", alu->r);
-  printf("\n");
-  printf("Memory:\n");
-  printf("Addr:   Contents:\n");
-  for (i = 0; i < SIZE_OF_MEM; i++) {
-    printf("0x%04X  0x%04X\n", i, mem[i]);
-  }
+void load(char *filename) {
+  FILE *in = fopen(filename, "r");
+  char str[10];
+  int line = 0;
+  while(line < SIZE_OF_MEM && fscanf(in, "%hX\n", &mem[line++]) != EOF);
+
+  fclose(in);
+}
+
+void nzpCheck(CPU_s *cpu, Register reg) {
+  if (reg < 0)
+    cpu->n = 1;
+  else
+    cpu->n = 0;
+
+  if (reg > 0)
+    cpu->p = 1;
+  else
+    cpu->p = 0;
+
+  if (reg == 0)
+    cpu->z = 1;
+  else
+    cpu->z = 0;
 }
 
 /*
@@ -257,9 +313,21 @@ void printStatus(CPU_s *cpu, ALU_s *alu) {
  * amount of the signed extension that is required.
  */
 Register sext(Register reg, Register signBit, Register signExtend) {
+
   Register out = reg;
   if (reg & signBit) {
     out |= signExtend; // Set first 9 bits is negative
   }
   return out;
+}
+
+void getPuts(CPU_s *cpu) {
+  unsigned int i = cpu->regFile[0];
+  char in[50] = "\0";
+  while(mem[i] != 0) {
+    in[i] = mem[i];
+    i++;
+  }
+  putString(in);
+  cpu->pc = cpu->regFile[7];
 }

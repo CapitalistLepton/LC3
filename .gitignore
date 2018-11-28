@@ -5,3 +5,5 @@ lc3
 CMakeLists.txt
 cmake-build-debug/
 run.sh
+makefile
+input.txt

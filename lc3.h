@@ -42,6 +42,7 @@
 #define ST 3
 #define AND 5
 #define LDR 6
+#define STR 7
 #define NOT 9
 #define JMP 12
 #define LEA 14

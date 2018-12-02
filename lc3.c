@@ -256,10 +256,10 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
                 cpu->pc = cpu->regFile[7];
                 break;
               case PUTS:
-                // TODO all of it
+                trapPuts(cpu);
                 break; 
               case HALT:
-                putString("-----HALTING PROGRAM-----");
+                //putString("-----HALTING PROGRAM-----");
                 return HALT;
             }
             break;
@@ -327,4 +327,15 @@ Register sext(Register reg, Register signBit, Register signExtend) {
     out |= signExtend; // Set first 9 bits is negative
   }
   return out;
+}
+
+void trapPuts(CPU_s *cpu) {
+  int index = cpu->regFile[0];
+  char in[50] = "\0";
+  while(mem[index] != 0) {
+    in[index] = mem[index];
+    index++;
+  }
+  putString(in);
+  cpu->pc = cpu->regFile[7];
 }

@@ -88,5 +88,6 @@ void run(CPU_s *cpu, ALU_s *alu);
 int runStep(CPU_s *cpu, ALU_s *alu);
 void load(char *filename);
 void nzpCheck(CPU_s *cpu, Register reg);
+void trapPuts(CPU_s *cpu);
 
 #endif

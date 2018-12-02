@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
         putString("Enter the filename above");
         getString(filename, MAX_STR_LEN);
         load(filename);
+        putString("");
         cpu->pc = 0;
         break;
       case '2':
@@ -124,7 +125,7 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             alu->a = cpu->regFile[sr1];
             alu->b = sr2;
             alu->r = alu->a + alu->b;
-			nzpCheck(cpu, alu->r);
+            nzpCheck(cpu, alu->r);
             break;
           case NOT:
             dr = cpu->ir >> DR_SHIFT & LAST3;
@@ -141,7 +142,7 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             alu->a = cpu->pc;
             alu->b = sr1;
             alu->r = alu->a + alu->b;
-			nzpCheck(cpu, alu->r);
+            nzpCheck(cpu, alu->r);
             break;
           case JSR:
             if (cpu->ir & JSR_IMMED) { 
@@ -155,14 +156,14 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             nzp = cpu->ir >> DR_SHIFT & LAST3;
             PCoffset = cpu->ir & LAST9;
             cpu->sext = sext(PCoffset, SIGN_BIT_9, SIGN_EXTEND_9);
-            n = (nzp & 4) ?  1 : 0;
-            z = (nzp & 2) ?  1 : 0;
-            p = (nzp & 1) ?  1 : 0;
+            n = nzp & 4;
+            z = nzp & 2;
+            p = nzp & 1;
           case TRAP:
             cpu->regFile[7] = cpu->pc;
             cpu->pc = cpu->ir & LAST8;
             break;
-	  case STR:
+          case STR:
             sr1 = cpu->ir >> DR_SHIFT & LAST3;
             sr2 = cpu->ir >> SR1_SHIFT & LAST3;
             PCoffset = cpu->ir & LAST6;
@@ -190,16 +191,16 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             cpu->mdr = mem[cpu->mar];
             break;
           case ST:
-		  case STR:
+          case STR:
             cpu->mar = alu->r;
             cpu->mdr = cpu->regFile[sr1];
             break;
           case AND:
             alu->a = cpu->regFile[sr1];
             if(cpu->ir & ADD_IMMED) {
-                alu->b = sr2;
+              alu->b = sr2;
             } else {
-                alu->b = cpu->regFile[sr2];
+              alu->b = cpu->regFile[sr2];
             }
             break;
           case NOT:
@@ -217,10 +218,10 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
           case JSR:
             if (cpu->ir & JSR_IMMED) { 
               alu->a = cpu->pc;
-	      alu->b = cpu->sext;
+              alu->b = cpu->sext;
             } else {
               alu->a = ZERO;
-	      alu->b = cpu->regFile[sr1];
+              alu->b = cpu->regFile[sr1];
             }
         }
         state = EXECUTE;
@@ -229,31 +230,29 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
         switch (opcode) {
           case ADD:
             alu->r = alu->a + alu->b;
-			nzpCheck(cpu, alu->r);
+            nzpCheck(cpu, alu->r);
             break;
           case AND:
             alu->r = alu->a & alu->b;
-			nzpCheck(cpu, alu->r);
+            nzpCheck(cpu, alu->r);
             break;
           case NOT:
             alu->r = ~alu->a;
-			nzpCheck(cpu, alu->r);
+            nzpCheck(cpu, alu->r);
             break;
-		  case JSR:
-			cpu->regFile[R7] = cpu->pc;
+          case JSR:
+            cpu->regFile[R7] = cpu->pc;
             alu->r = alu->a + alu->b;
-			cpu->pc = alu->r;
+            cpu->pc = alu->r;
             break;
           case TRAP:
             switch(cpu->pc) {
               case GETC:
                 sr1 = getChar();
                 cpu->regFile[0] = sr1;
-                cpu->pc = cpu->regFile[7];
                 break;
               case OUT:
                 outChar(cpu->regFile[0]);
-                cpu->pc = cpu->regFile[7];
                 break;
               case PUTS:
                 trapPuts(cpu);
@@ -262,6 +261,7 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
                 //putString("-----HALTING PROGRAM-----");
                 return HALT;
             }
+            cpu->pc = cpu->regFile[7];
             break;
         }
         state = STORE;
@@ -279,7 +279,7 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             cpu->regFile[dr] = cpu->mdr;
             break;
           case ST:
-		  case STR:
+          case STR:
             mem[cpu->mar] = cpu->mdr;
             break;
         }
@@ -300,20 +300,18 @@ void load(char *filename) {
 }
 
 void nzpCheck(CPU_s *cpu, Register reg) {
-	if (reg < 0) 
-		cpu->n = 1;
-	else
-		cpu->n = 0;
-	
-	if (reg > 0) 
-		cpu->p = 1;
-	else
-		cpu->p = 0;
-	
-	if (reg == 0) 
-		cpu->z = 1;
-	else
-		cpu->z = 0;
+  if (reg < 0) 
+    cpu->n = 1;
+  else
+    cpu->n = 0;
+  if (reg > 0) 
+    cpu->p = 1;
+  else
+    cpu->p = 0;
+  if (reg == 0) 
+    cpu->z = 1;
+  else
+    cpu->z = 0;
 }
 
 /*

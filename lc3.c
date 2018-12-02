@@ -98,8 +98,8 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             break;
           case ST:
             sr1 = cpu->ir >> DR_SHIFT & LAST3;
-             PCoffset = cpu->ir & LAST9;
-             cpu->sext = sext(PCoffset, SIGN_BIT_9, SIGN_EXTEND_9);
+            PCoffset = cpu->ir & LAST9;
+            cpu->sext = sext(PCoffset, SIGN_BIT_9, SIGN_EXTEND_9);
             alu->a = cpu->pc;
             alu->b = cpu->sext;
             alu->r = alu->a + alu->b;
@@ -143,12 +143,12 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             alu->r = alu->a + alu->b;
 			nzpCheck(cpu, alu->r);
             break;
-		  case JSR:
-			if (cpu->ir & JSR_IMMED) { 
+          case JSR:
+            if (cpu->ir & JSR_IMMED) { 
               PCoffset = cpu->ir & LAST11;
               cpu->sext = sext(PCoffset, SIGN_BIT_11, SIGN_EXTEND_11);
             } else {
-			  sr1 = cpu->ir >> SR1_SHIFT & LAST3;
+              sr1 = cpu->ir >> SR1_SHIFT & LAST3;
             }
             break;
           case BR:
@@ -162,9 +162,9 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             cpu->regFile[7] = cpu->pc;
             cpu->pc = cpu->ir & LAST8;
             break;
-		  case ST:
+	  case STR:
             sr1 = cpu->ir >> DR_SHIFT & LAST3;
-			sr2 = cpu->ir >> SR1_SHIFT & LAST3;
+            sr2 = cpu->ir >> SR1_SHIFT & LAST3;
             PCoffset = cpu->ir & LAST6;
             cpu->sext = sext(PCoffset, SIGN_BIT_6, SIGN_EXTEND_6);
             alu->a = cpu->regFile[sr2];

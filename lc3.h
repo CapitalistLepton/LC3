@@ -6,7 +6,7 @@
 #include "lc3ui.h"
 
 #define NUM_REGISTERS 8
-#define SIZE_OF_MEM 32
+#define SIZE_OF_MEM 128 
 #define MAX_STR_LEN 100
 
 #define SIGN_BIT_9 0x100

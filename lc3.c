@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
   int i;
   CPU_s *cpu = (CPU_s *) malloc(sizeof(CPU_s));
   ALU_s *alu = (ALU_s *) malloc(sizeof(ALU_s));
-  char filename[MAX_STR_LEN];
+  char str[MAX_STR_LEN];
 
   cpu->pc = 0;
   cpu->ir = 0;
@@ -32,8 +32,8 @@ int main(int argc, char *argv[]) {
     switch (sel) {
       case '1':
         putString("Enter the filename above");
-        getString(filename, MAX_STR_LEN);
-        load(filename);
+        getString(str, MAX_STR_LEN);
+        load(str);
         putString("");
         cpu->pc = 0;
         break;
@@ -44,7 +44,10 @@ int main(int argc, char *argv[]) {
         runStep(cpu, alu);
         break;
       case '5':
-        displayDebug(cpu, alu, cpu->pc, mem);
+        putString("Enter memory address above");
+        getString(str, MAX_STR_LEN);
+        putString("");
+        displayDebug(cpu, alu, strtol(str, NULL, 16), mem);
         break;
       case '9':
         endUI();
@@ -329,10 +332,11 @@ Register sext(Register reg, Register signBit, Register signExtend) {
 
 void trapPuts(CPU_s *cpu) {
   int index = cpu->regFile[0];
+  int i = 0;
   char in[50] = "\0";
   while(mem[index] != 0) {
-    in[index] = mem[index];
-    index++;
+    in[i] = mem[index];
+    index++; i++;
   }
   putString(in);
   cpu->pc = cpu->regFile[7];

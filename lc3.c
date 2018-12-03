@@ -163,6 +163,7 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             n = nzp & 4;
             z = nzp & 2;
             p = nzp & 1;
+            break;
           case TRAP:
             cpu->regFile[7] = cpu->pc;
             cpu->pc = cpu->ir & LAST8;
@@ -214,7 +215,7 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             cpu->pc = cpu->regFile[sr1];
             break;
           case BR:
-            if( (n & cpu->n) || (z & cpu->z) || (p & cpu->p) ) {
+            if( (n && cpu->n) || (z && cpu->z) || (p && cpu->p) ) {
               cpu->pc = cpu->sext + cpu->pc;
             }
             cpu->n = cpu->z = cpu->p = n = z = p = 0;
@@ -304,11 +305,11 @@ void load(char *filename) {
 }
 
 void nzpCheck(CPU_s *cpu, Register reg) {
-  if (reg < 0) 
+  if (reg & MSB)  // Check if most significant bit is set
     cpu->n = 1;
   else
     cpu->n = 0;
-  if (reg > 0) 
+  if ((reg & MSB) == 0 && reg != 0)
     cpu->p = 1;
   else
     cpu->p = 0;

@@ -18,6 +18,8 @@
 #define SIGN_BIT_11 0x400
 #define SIGN_EXTEND_11 0xF800
 
+#define MSB 0x8000
+
 #define LAST3 0x7
 #define LAST5 0x1F
 #define LAST6 0x3F

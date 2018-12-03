@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
         break;
       case '3':
         runStep(cpu, alu);
+        displayDebug(cpu, alu, cpu->pc - 1, mem);
         break;
       case '5':
         putString("Enter memory address above");

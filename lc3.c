@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
         putString("Enter memory address above");
         getString(str, MAX_STR_LEN);
         putString("");
-        displayDebug(cpu, alu, strtol(str, NULL, 16) - 0x3000, mem);
+        displayDebug(cpu, alu, strtol(str, NULL, 16) - MEM_START, mem);
         break;
       case '9':
         endUI();
@@ -299,10 +299,9 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
 
 void load(char *filename, CPU_s *cpu) {
   FILE *in = fopen(filename, "r");
-  char str[10];
   unsigned short line = 0;
   fscanf(in, "%hX\n", &line);
-  line -= 0x3000;
+  line -= MEM_START;
   cpu->pc = line;
   while(line < SIZE_OF_MEM && fscanf(in, "%hX\n", &mem[line++]) != EOF);
 

@@ -7,6 +7,7 @@
 
 #define NUM_REGISTERS 8
 #define SIZE_OF_MEM 128 
+#define MEM_START 0x3000
 #define MAX_STR_LEN 100
 
 #define SIGN_BIT_9 0x100

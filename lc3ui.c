@@ -64,25 +64,25 @@ void displayDebug(CPU_s *cpu, ALU_s *alu, int memStart, unsigned short mem[]) {
 
   for (i = 0; i < NUM_REG; i++) {
     mvwprintw(debug, GREET_LEN + i, 0, "R%d:x%04X\t\tx%04X:x%04X", i, 
-      cpu->regFile[i], memStart + i + 0x3000, mem[memStart + i]);
+      cpu->regFile[i], memStart + i + MEM_START, mem[memStart + i]);
   }
   for (; i < 11; i++) {
-    mvwprintw(debug, GREET_LEN + i, 0, "\t\t\tx%04X:x%04X", memStart + i + 0x3000,
+    mvwprintw(debug, GREET_LEN + i, 0, "\t\t\tx%04X:x%04X", memStart + i + MEM_START,
       mem[memStart + i]);
   }
-  mvwprintw(debug, GREET_LEN + i, 0, "PC:x%04X  IR:x%04X\tx%04X:x%04X", cpu->pc + 0x3000,
-    cpu->ir, memStart + i + 0x3000, mem[memStart + i]);
+  mvwprintw(debug, GREET_LEN + i, 0, "PC:x%04X  IR:x%04X\tx%04X:x%04X", cpu->pc + MEM_START,
+    cpu->ir, memStart + i + MEM_START, mem[memStart + i]);
   i++;
   mvwprintw(debug, GREET_LEN + i, 0, "A: x%04X  B: x%04X\tx%04X:x%04X", alu->a, 
-    alu->b, memStart + i + 0x3000, mem[memStart + i]);
+    alu->b, memStart + i + MEM_START, mem[memStart + i]);
   i++;
   mvwprintw(debug, GREET_LEN + i, 0, "MAR:x%04X MDR:x%04X\tx%04X:x%04X", 
-    cpu->mar + 0x3000, cpu->mdr, memStart + i + 0x3000, mem[memStart + i]);
+    cpu->mar + MEM_START, cpu->mdr, memStart + i + MEM_START, mem[memStart + i]);
   i++;
   mvwprintw(debug, GREET_LEN + i, 0, "CC: N:%X Z:%X P:%X\t\tx%04X:x%04X", 
-    cpu->n, cpu->z, cpu->p, memStart + i + 0x3000, mem[memStart + i]);
+    cpu->n, cpu->z, cpu->p, memStart + i + MEM_START, mem[memStart + i]);
   i++;
-  mvwprintw(debug, GREET_LEN + i, 0, "\t\t\tx%04X:x%04X", memStart + i + 0x3000,
+  mvwprintw(debug, GREET_LEN + i, 0, "\t\t\tx%04X:x%04X", memStart + i + MEM_START,
       mem[memStart + i]);
   wrefresh(debug);
 }

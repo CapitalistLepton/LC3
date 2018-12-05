@@ -18,6 +18,7 @@
 #define SELECT_CUR_Y 1
 #define IN_CUR_X 8
 #define IN_CUR_Y 0
+#define MEM_START 0x3000
 
 typedef struct cpu_s CPU_s;
 typedef struct alu_s ALU_s;

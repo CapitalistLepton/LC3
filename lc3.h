@@ -88,7 +88,7 @@ Register sext6(Register reg);
 Register sext5(Register reg);
 void run(CPU_s *cpu, ALU_s *alu);
 int runStep(CPU_s *cpu, ALU_s *alu);
-void load(char *filename);
+void load(char *filename, CPU_s *cpu);
 void nzpCheck(CPU_s *cpu, Register reg);
 void trapPuts(CPU_s *cpu);
 

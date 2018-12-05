@@ -34,10 +34,9 @@ int main(int argc, char *argv[]) {
       case '1':
         putString("Enter the filename above");
         getString(str, MAX_STR_LEN);
-        load(str);
+        load(str, cpu);
         displayDebug(cpu, alu, cpu->pc, mem);
         putString("");
-        cpu->pc = 0;
         break;
       case '2':
         run(cpu, alu);
@@ -298,12 +297,13 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
   return 0;
 }
 
-void load(char *filename) {
+void load(char *filename, CPU_s *cpu) {
   FILE *in = fopen(filename, "r");
   char str[10];
   unsigned short line = 0;
   fscanf(in, "%hX\n", &line);
   line -= 0x3000;
+  cpu->pc = line;
   while(line < SIZE_OF_MEM && fscanf(in, "%hX\n", &mem[line++]) != EOF);
 
   fclose(in);

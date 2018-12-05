@@ -2,7 +2,7 @@
 #include "lc3ui.h"
 
 /*
- * Zane Littrell, Luke Gillmore, Trenton Greevebiester
+ * Zane Littrell, Luke Gillmore, Trenton Greevebiester, Veronica Gross
  * Final Project
  */
 
@@ -27,6 +27,7 @@ int main(int argc, char *argv[]) {
   }
 
   startUI();
+  displayDebug(cpu, alu, cpu->pc, mem);
   for (;;) {
     char sel = getSelection();
     switch (sel) {
@@ -34,11 +35,13 @@ int main(int argc, char *argv[]) {
         putString("Enter the filename above");
         getString(str, MAX_STR_LEN);
         load(str);
+        displayDebug(cpu, alu, cpu->pc, mem);
         putString("");
         cpu->pc = 0;
         break;
       case '2':
         run(cpu, alu);
+        displayDebug(cpu, alu, cpu->pc - 1, mem);
         break;
       case '3':
         runStep(cpu, alu);
@@ -48,7 +51,7 @@ int main(int argc, char *argv[]) {
         putString("Enter memory address above");
         getString(str, MAX_STR_LEN);
         putString("");
-        displayDebug(cpu, alu, strtol(str, NULL, 16), mem);
+        displayDebug(cpu, alu, strtol(str, NULL, 16) - 0x3000, mem);
         break;
       case '9':
         endUI();
@@ -65,6 +68,7 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
   unsigned short opcode, dr, sr1, sr2, nzp, immed5, PCoffset;
   unsigned char n, z, p; n = z = p = 0;
   int state = FETCH;
+  int trap = 0;
   do {
     switch (state) {
       case FETCH:
@@ -166,7 +170,7 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             break;
           case TRAP:
             cpu->regFile[7] = cpu->pc;
-            cpu->pc = cpu->ir & LAST8;
+            trap = cpu->ir & LAST8;
             break;
           case STR:
             sr1 = cpu->ir >> DR_SHIFT & LAST3;
@@ -251,7 +255,7 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
             cpu->pc = alu->r;
             break;
           case TRAP:
-            switch(cpu->pc) {
+            switch(trap) {
               case GETC:
                 sr1 = getChar();
                 cpu->regFile[0] = sr1;
@@ -263,10 +267,9 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
                 trapPuts(cpu);
                 break; 
               case HALT:
-                //putString("-----HALTING PROGRAM-----");
+                putString("-----HALTING PROGRAM-----");
                 return HALT;
             }
-            cpu->pc = cpu->regFile[7];
             break;
         }
         state = STORE;
@@ -298,7 +301,9 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
 void load(char *filename) {
   FILE *in = fopen(filename, "r");
   char str[10];
-  int line = 0;
+  unsigned short line = 0;
+  fscanf(in, "%hX\n", &line);
+  line -= 0x3000;
   while(line < SIZE_OF_MEM && fscanf(in, "%hX\n", &mem[line++]) != EOF);
 
   fclose(in);

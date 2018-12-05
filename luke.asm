@@ -1,0 +1,20 @@
+  .ORIG X0 
+  LD R2, TERM 
+  LD R3, ASCII
+  LD R4, NUM
+AGAIN GETC
+      ADD R1, R2, R0
+      BRz STOP
+      ADD R5, R4, R0
+      BRn AGAIN
+      ADD R0, R0, R3
+      OUT
+      BRp AGAIN
+TERM .FILL xFFA0
+ASCII .FILL xFFE0
+NUM .FILL #-58
+STOP LEA R0, BYE 
+     PUTS
+     HALT
+BYE .STRINGZ "GOOD BYE!"
+    .END 

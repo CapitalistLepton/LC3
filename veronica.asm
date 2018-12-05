@@ -1,4 +1,4 @@
-	.ORIG	X0000
+	.ORIG	X3000
 	AND R0, R0, #0
 	BRnp	DOOM
 	AND R1, R1, R0

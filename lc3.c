@@ -32,11 +32,13 @@ int main(int argc, char *argv[]) {
     char sel = getSelection();
     switch (sel) {
       case '1':
+        clearHalt();
+        clearOutput();
         putString("Enter the filename above");
         getString(str, MAX_STR_LEN);
         load(str, cpu);
         displayDebug(cpu, alu, cpu->pc, mem);
-        putString("");
+        clearOutput(); 
         break;
       case '2':
         run(cpu, alu);
@@ -47,9 +49,10 @@ int main(int argc, char *argv[]) {
         displayDebug(cpu, alu, cpu->pc - 1, mem);
         break;
       case '5':
+        clearOutput();
         putString("Enter memory address above");
         getString(str, MAX_STR_LEN);
-        putString("");
+        clearOutput();
         displayDebug(cpu, alu, strtol(str, NULL, 16) - MEM_START, mem);
         break;
       case '9':
@@ -266,7 +269,7 @@ int runStep(CPU_s *cpu, ALU_s *alu) {
                 trapPuts(cpu);
                 break; 
               case HALT:
-                putString("-----HALTING PROGRAM-----");
+                displayHalt();
                 return HALT;
             }
             break;

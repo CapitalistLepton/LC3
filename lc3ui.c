@@ -10,6 +10,7 @@ WINDOW *debug;
 WINDOW *selection;
 WINDOW *input;
 WINDOW *output;
+WINDOW *halt;
 
 void startUI() {
   initscr(); // Init curses
@@ -23,6 +24,7 @@ void startUI() {
   selectWin(leftX);
   inputWin(leftX);
   outputWin(leftX);
+  halt = newwin(OUT_LEN, COLS, DEBUG_LEN + SELECT_LEN + IN_LEN + OUT_LEN, leftX);
 
   wrefresh(stdscr);
   wrefresh(greeting);
@@ -30,6 +32,7 @@ void startUI() {
   wrefresh(selection);
   wrefresh(input);
   wrefresh(output);
+  wrefresh(halt);
 }
 
 void greetingWin(char *msg) {
@@ -95,16 +98,30 @@ char getSelection() {
   return choice;
 }
 
-void putString(char *str) {
+void clearOutput() {
   wclear(output);
-  wprintw(output, "Output: %s", str);
+  wprintw(output, "Output: ");
+  wrefresh(output);
+}
+
+void putString(char *str) {
+  wprintw(output, "%s", str);
   wrefresh(output);
 }
 
 void outChar(char ch) {
-  //wclear(output);
   wprintw(output, "%c", ch);
   wrefresh(output);
+}
+
+void displayHalt() {
+  wprintw(halt, "------HALTING PROGRAM------");
+  wrefresh(halt);
+}
+
+void clearHalt() {
+  wclear(halt);
+  wrefresh(halt);
 }
 
 char getChar() {

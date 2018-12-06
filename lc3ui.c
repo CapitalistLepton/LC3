@@ -89,8 +89,6 @@ void displayDebug(CPU_s *cpu, ALU_s *alu, int memStart, unsigned short mem[]) {
 
 char getSelection() {
   char choice;
-/*  wprintw(selection, "Select: 1) Load, 2) Run, 3) Step, 5) Display Mem, 9) Exit\n");
-  wprintw(selection, "> "); */
   wmove(selection, SELECT_CUR_Y, SELECT_CUR_X);
   wclrtoeol(selection);
   choice = wgetch(selection);
@@ -104,8 +102,8 @@ void putString(char *str) {
 }
 
 void outChar(char ch) {
-  wclear(output);
-  wprintw(output, "Output: %c", ch);
+  //wclear(output);
+  wprintw(output, "%c", ch);
   wrefresh(output);
 }
 
